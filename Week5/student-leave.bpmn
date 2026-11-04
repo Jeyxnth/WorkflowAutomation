@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  id="Definitions_StudentLeave"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="student-leave" name="Student Leave Application" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_LeaveRequested" name="Leave requested">
+      <bpmn:outgoing>Flow_Start_Validate</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_ValidateLeave" name="Validate leave request">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="validate-leave" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Start_Validate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validate_Decision</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_Start_Validate" sourceRef="StartEvent_LeaveRequested" targetRef="Task_ValidateLeave" />
+    <bpmn:sequenceFlow id="Flow_Validate_Decision" sourceRef="Task_ValidateLeave" targetRef="Gateway_LeaveDecision" />
+    <bpmn:exclusiveGateway id="Gateway_LeaveDecision" name="Valid and short leave?" default="Flow_Invalid_Merge">
+      <bpmn:incoming>Flow_Validate_Decision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Short_Merge</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Long_Approval</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Invalid_Merge</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_Short_Merge" name="Valid, up to 2 days" sourceRef="Gateway_LeaveDecision" targetRef="Gateway_Merge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=valid and leaveDays &lt;= 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Long_Approval" name="Valid, more than 2 days" sourceRef="Gateway_LeaveDecision" targetRef="Task_FacultyApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=valid and leaveDays &gt; 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Invalid_Merge" name="Invalid dates" sourceRef="Gateway_LeaveDecision" targetRef="Gateway_Merge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=not(valid)</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_FacultyApproval" name="Faculty Advisor approval">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="fa-approval-form" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Long_Approval</bpmn:incoming>
+      <bpmn:outgoing>Flow_Approval_Merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_Approval_Merge" sourceRef="Task_FacultyApproval" targetRef="Gateway_Merge" />
+    <bpmn:exclusiveGateway id="Gateway_Merge" name="Continue">
+      <bpmn:incoming>Flow_Short_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_Invalid_Merge</bpmn:incoming>
+      <bpmn:incoming>Flow_Approval_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_Merge_Notify</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_NotifyStudent" name="Notify student">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-student" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Merge_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_Merge_Notify" sourceRef="Gateway_Merge" targetRef="Task_NotifyStudent" />
+    <bpmn:endEvent id="EndEvent_LeaveComplete" name="Decision recorded">
+      <bpmn:incoming>Flow_Notify_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Notify_End" sourceRef="Task_NotifyStudent" targetRef="EndEvent_LeaveComplete" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_StudentLeave">
+    <bpmndi:BPMNPlane id="BPMNPlane_StudentLeave" bpmnElement="student-leave">
+      <bpmndi:BPMNShape id="Shape_Start" bpmnElement="StartEvent_LeaveRequested">
+        <dc:Bounds x="100" y="180" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Validate" bpmnElement="Task_ValidateLeave">
+        <dc:Bounds x="180" y="158" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Decision" bpmnElement="Gateway_LeaveDecision" isMarkerVisible="true">
+        <dc:Bounds x="350" y="173" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Approval" bpmnElement="Task_FacultyApproval">
+        <dc:Bounds x="470" y="300" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Merge" bpmnElement="Gateway_Merge" isMarkerVisible="true">
+        <dc:Bounds x="670" y="173" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Notify" bpmnElement="Task_NotifyStudent">
+        <dc:Bounds x="770" y="158" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End" bpmnElement="EndEvent_LeaveComplete">
+        <dc:Bounds x="940" y="180" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Start_Validate" bpmnElement="Flow_Start_Validate">
+        <di:waypoint x="136" y="198" /><di:waypoint x="180" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Validate_Decision" bpmnElement="Flow_Validate_Decision">
+        <di:waypoint x="300" y="198" /><di:waypoint x="350" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Short_Merge" bpmnElement="Flow_Short_Merge">
+        <di:waypoint x="400" y="198" /><di:waypoint x="670" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Long_Approval" bpmnElement="Flow_Long_Approval">
+        <di:waypoint x="375" y="223" /><di:waypoint x="375" y="340" /><di:waypoint x="470" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Invalid_Merge" bpmnElement="Flow_Invalid_Merge">
+        <di:waypoint x="375" y="173" /><di:waypoint x="375" y="105" /><di:waypoint x="695" y="105" /><di:waypoint x="695" y="173" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Approval_Merge" bpmnElement="Flow_Approval_Merge">
+        <di:waypoint x="620" y="340" /><di:waypoint x="695" y="340" /><di:waypoint x="695" y="223" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Merge_Notify" bpmnElement="Flow_Merge_Notify">
+        <di:waypoint x="720" y="198" /><di:waypoint x="770" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Notify_End" bpmnElement="Flow_Notify_End">
+        <di:waypoint x="890" y="198" /><di:waypoint x="940" y="198" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="Definitions_SlotDecision" name="Slot Decision" namespace="http://srmist.example/workflow/hospital-booking/decision">
+  <decision id="slot_decision" name="slot_decision">
+    <decisionTable id="DecisionTable_SlotDecision" hitPolicy="UNIQUE">
+      <input id="Input_Department" label="department">
+        <inputExpression id="InputExpression_Department" typeRef="string"><text>department</text></inputExpression>
+      </input>
+      <input id="Input_BookedCount" label="bookedCount">
+        <inputExpression id="InputExpression_BookedCount" typeRef="number"><text>bookedCount</text></inputExpression>
+      </input>
+      <output id="Output_SlotStatus" name="slotStatus" typeRef="string" />
+      <output id="Output_SuggestedAction" name="suggestedAction" typeRef="string" />
+      <rule id="Rule_Cardio_Full">
+        <inputEntry id="Entry_Cardio_Full_Department"><text>"Cardiology"</text></inputEntry>
+        <inputEntry id="Entry_Cardio_Full_Count"><text>&gt;= 10</text></inputEntry>
+        <outputEntry id="Entry_Cardio_Full_Status"><text>"FULL"</text></outputEntry>
+        <outputEntry id="Entry_Cardio_Full_Action"><text>"Suggest another slot or department"</text></outputEntry>
+      </rule>
+      <rule id="Rule_Cardio_Available">
+        <inputEntry id="Entry_Cardio_Available_Department"><text>"Cardiology"</text></inputEntry>
+        <inputEntry id="Entry_Cardio_Available_Count"><text>&lt; 10</text></inputEntry>
+        <outputEntry id="Entry_Cardio_Available_Status"><text>"AVAILABLE"</text></outputEntry>
+        <outputEntry id="Entry_Cardio_Available_Action"><text>"Book preferred slot"</text></outputEntry>
+      </rule>
+      <rule id="Rule_Other_Full">
+        <inputEntry id="Entry_Other_Full_Department"><text>-</text></inputEntry>
+        <inputEntry id="Entry_Other_Full_Count"><text>&gt;= 10</text></inputEntry>
+        <outputEntry id="Entry_Other_Full_Status"><text>"FULL"</text></outputEntry>
+        <outputEntry id="Entry_Other_Full_Action"><text>"Suggest another slot or department"</text></outputEntry>
+      </rule>
+      <rule id="Rule_Other_Available">
+        <inputEntry id="Entry_Other_Available_Department"><text>-</text></inputEntry>
+        <inputEntry id="Entry_Other_Available_Count"><text>&lt; 10</text></inputEntry>
+        <outputEntry id="Entry_Other_Available_Status"><text>"AVAILABLE"</text></outputEntry>
+        <outputEntry id="Entry_Other_Available_Action"><text>"Book preferred slot"</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

@@ -1,0 +1,158 @@
+{
+  "components": [
+    {
+      "type": "text",
+      "text": "# Review OD Request\nVerify the student's details and record your decision.",
+      "id": "Field_odReviewForm_1",
+      "layout": {
+        "row": "R0",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Student Name",
+      "key": "studentName",
+      "readonly": true,
+      "id": "Field_odReviewForm_2",
+      "layout": {
+        "row": "R1",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Register Number",
+      "key": "regNo",
+      "readonly": true,
+      "id": "Field_odReviewForm_3",
+      "layout": {
+        "row": "R1",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Event Name",
+      "key": "eventName",
+      "readonly": true,
+      "id": "Field_odReviewForm_4",
+      "layout": {
+        "row": "R2",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Event Type",
+      "key": "eventType",
+      "readonly": true,
+      "id": "Field_odReviewForm_5",
+      "layout": {
+        "row": "R2",
+        "columns": null
+      }
+    },
+    {
+      "type": "datetime",
+      "subtype": "date",
+      "dateLabel": "From Date",
+      "label": "From Date",
+      "key": "fromDate",
+      "readonly": true,
+      "id": "Field_odReviewForm_6",
+      "layout": {
+        "row": "R3",
+        "columns": null
+      }
+    },
+    {
+      "type": "datetime",
+      "subtype": "date",
+      "dateLabel": "To Date",
+      "label": "To Date",
+      "key": "toDate",
+      "readonly": true,
+      "id": "Field_odReviewForm_7",
+      "layout": {
+        "row": "R3",
+        "columns": null
+      }
+    },
+    {
+      "type": "number",
+      "label": "Total OD Days",
+      "key": "odDays",
+      "readonly": true,
+      "id": "Field_odReviewForm_8",
+      "layout": {
+        "row": "R3",
+        "columns": null
+      }
+    },
+    {
+      "type": "textarea",
+      "label": "Reason for OD",
+      "key": "reason",
+      "readonly": true,
+      "id": "Field_odReviewForm_9",
+      "layout": {
+        "row": "R4",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Proof Link",
+      "key": "proofLink",
+      "readonly": true,
+      "id": "Field_odReviewForm_10",
+      "layout": {
+        "row": "R5",
+        "columns": null
+      }
+    },
+    {
+      "type": "radio",
+      "label": "Decision",
+      "key": "decision",
+      "values": [
+        {
+          "label": "Approve",
+          "value": "approved"
+        },
+        {
+          "label": "Reject",
+          "value": "rejected"
+        }
+      ],
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odReviewForm_11",
+      "layout": {
+        "row": "R6",
+        "columns": null
+      }
+    },
+    {
+      "type": "textarea",
+      "label": "Reviewer Comments",
+      "key": "reviewerComments",
+      "id": "Field_odReviewForm_12",
+      "layout": {
+        "row": "R7",
+        "columns": null
+      }
+    }
+  ],
+  "type": "default",
+  "id": "odReviewForm",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.6.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.30.0"
+  },
+  "schemaVersion": 16
+}

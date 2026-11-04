@@ -1,0 +1,8 @@
+{
+  "messageName": "Cancel appointment",
+  "correlationKey": "PATIENT_1001",
+  "variables": {
+    "patientId": { "value": "PATIENT_1001", "type": "String" },
+    "cancellationReason": { "value": "Patient requested cancellation", "type": "String" }
+  }
+}

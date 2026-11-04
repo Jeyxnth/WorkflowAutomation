@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_EmployeeLeaveApproval" targetNamespace="http://example.com/employee-leave-approval" exporter="Camunda Modeler" exporterVersion="5.49.0">
+  <bpmn:process id="employee_leave_approval" name="Employee Leave Request Approval" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_LeaveRequest" name="Leave Request Received">
+      <bpmn:outgoing>Flow_Start_Submit</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_SubmitLeave" name="Submit Leave Request">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Start_Submit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Submit_CheckBalance</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_CheckBalance" name="Retrieve Leave Balance">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="get-leave-balance" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Submit_CheckBalance</bpmn:incoming>
+      <bpmn:outgoing>Flow_Balance_Decision</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:businessRuleTask id="Task_LeaveDecision" name="Evaluate Leave Rules">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="leaveApprovalDecision" resultVariable="leaveDecision" bindingType="deployment" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Balance_Decision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decision_Gateway</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="Gateway_Decision" name="Leave Decision">
+      <bpmn:incoming>Flow_Decision_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Insufficient</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AutoApprove</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Manager</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_InsufficientNotification" name="Notify Employee - Insufficient Balance">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-leave-rejection" retries="3" />
+        <zeebe:taskHeaders>
+          <zeebe:header key="reason" value="Insufficient Balance" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Insufficient</bpmn:incoming>
+      <bpmn:outgoing>Flow_Insufficient_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_Insufficient" name="Rejected - Insufficient Balance">
+      <bpmn:incoming>Flow_Insufficient_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_AutoApprove" name="Auto-Approve Sick Leave">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="auto-approve-leave" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AutoApprove</bpmn:incoming>
+      <bpmn:outgoing>Flow_AutoApprove_HR</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_ManagerApproval" name="Manager Approval">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="managers" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Manager</bpmn:incoming>
+      <bpmn:outgoing>Flow_Manager_Gateway</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ManagerDecision" name="Manager Approved?">
+      <bpmn:incoming>Flow_Manager_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManagerRejected</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ManagerApproved</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_ManagerRejectedNotification" name="Notify Employee - Rejected">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-leave-rejection" retries="3" />
+        <zeebe:taskHeaders>
+          <zeebe:header key="reason" value="Manager Rejected" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ManagerRejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManagerRejected_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_ManagerRejected" name="Rejected by Manager">
+      <bpmn:incoming>Flow_ManagerRejected_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_HRRecord" name="Forward to HR for Record-Keeping">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="hr-record-leave" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AutoApprove_HR</bpmn:incoming>
+      <bpmn:incoming>Flow_ManagerApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_HR_UpdateBalance</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_UpdateBalance" name="Update Leave Balance">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="update-leave-balance" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_HR_UpdateBalance</bpmn:incoming>
+      <bpmn:outgoing>Flow_Update_Notify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_ApprovalNotification" name="Notify Employee - Approved">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-leave-approval" retries="3" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Update_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_Approved" name="Leave Approved">
+      <bpmn:incoming>Flow_Notify_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_Submit" sourceRef="StartEvent_LeaveRequest" targetRef="Task_SubmitLeave" />
+    <bpmn:sequenceFlow id="Flow_Submit_CheckBalance" sourceRef="Task_SubmitLeave" targetRef="Task_CheckBalance" />
+    <bpmn:sequenceFlow id="Flow_Balance_Decision" sourceRef="Task_CheckBalance" targetRef="Task_LeaveDecision" />
+    <bpmn:sequenceFlow id="Flow_Decision_Gateway" sourceRef="Task_LeaveDecision" targetRef="Gateway_Decision" />
+    <bpmn:sequenceFlow id="Flow_Insufficient" name="Insufficient Balance" sourceRef="Gateway_Decision" targetRef="Task_InsufficientNotification">
+      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">= leaveDecision = "INSUFFICIENT_BALANCE"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AutoApprove" name="Auto-Approve" sourceRef="Gateway_Decision" targetRef="Task_AutoApprove">
+      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">= leaveDecision = "AUTO_APPROVE"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Manager" name="Manager Review" sourceRef="Gateway_Decision" targetRef="Task_ManagerApproval">
+      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">= leaveDecision = "MANAGER_APPROVAL"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Insufficient_End" sourceRef="Task_InsufficientNotification" targetRef="EndEvent_Insufficient" />
+    <bpmn:sequenceFlow id="Flow_AutoApprove_HR" sourceRef="Task_AutoApprove" targetRef="Task_HRRecord" />
+    <bpmn:sequenceFlow id="Flow_Manager_Gateway" sourceRef="Task_ManagerApproval" targetRef="Gateway_ManagerDecision" />
+    <bpmn:sequenceFlow id="Flow_ManagerRejected" name="Rejected" sourceRef="Gateway_ManagerDecision" targetRef="Task_ManagerRejectedNotification">
+      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">= managerDecision = "REJECTED"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ManagerApproved" name="Approved" sourceRef="Gateway_ManagerDecision" targetRef="Task_HRRecord">
+      <bpmn:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="bpmn:tFormalExpression">= managerDecision = "APPROVED"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ManagerRejected_End" sourceRef="Task_ManagerRejectedNotification" targetRef="EndEvent_ManagerRejected" />
+    <bpmn:sequenceFlow id="Flow_HR_UpdateBalance" sourceRef="Task_HRRecord" targetRef="Task_UpdateBalance" />
+    <bpmn:sequenceFlow id="Flow_Update_Notify" sourceRef="Task_UpdateBalance" targetRef="Task_ApprovalNotification" />
+    <bpmn:sequenceFlow id="Flow_Notify_End" sourceRef="Task_ApprovalNotification" targetRef="EndEvent_Approved" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_EmployeeLeaveApproval">
+    <bpmndi:BPMNPlane id="BPMNPlane_EmployeeLeaveApproval" bpmnElement="employee_leave_approval">
+      <bpmndi:BPMNShape id="StartEvent_LeaveRequest_di" bpmnElement="StartEvent_LeaveRequest">
+        <dc:Bounds x="170" y="260" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="151" y="296" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SubmitLeave_di" bpmnElement="Task_SubmitLeave" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="240" y="238" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckBalance_di" bpmnElement="Task_CheckBalance" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="410" y="238" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LeaveDecision_di" bpmnElement="Task_LeaveDecision" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="600" y="238" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Decision_di" bpmnElement="Gateway_Decision" isMarkerVisible="true" bioc:stroke="#5b176d" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#5b176d">
+        <dc:Bounds x="790" y="253" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="777" y="303" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InsufficientNotification_di" bpmnElement="Task_InsufficientNotification" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="880" y="70" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Insufficient_di" bpmnElement="EndEvent_Insufficient" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="1110" y="92" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1089" y="128" width="79" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AutoApprove_di" bpmnElement="Task_AutoApprove" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="880" y="210" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ManagerApproval_di" bpmnElement="Task_ManagerApproval" bioc:stroke="#6b3c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#6b3c00">
+        <dc:Bounds x="880" y="350" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ManagerDecision_di" bpmnElement="Gateway_ManagerDecision" isMarkerVisible="true" bioc:stroke="#5b176d" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#5b176d">
+        <dc:Bounds x="1110" y="365" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1108" y="415" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ManagerRejectedNotification_di" bpmnElement="Task_ManagerRejectedNotification" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="1200" y="470" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ManagerRejected_di" bpmnElement="EndEvent_ManagerRejected" bioc:stroke="#831311" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#831311">
+        <dc:Bounds x="1440" y="492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1429" y="528" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HRRecord_di" bpmnElement="Task_HRRecord" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="1200" y="210" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateBalance_di" bpmnElement="Task_UpdateBalance" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="1440" y="210" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ApprovalNotification_di" bpmnElement="Task_ApprovalNotification" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="1660" y="210" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Approved_di" bpmnElement="EndEvent_Approved" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="1900" y="232" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1878" y="268" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_Submit_di" bpmnElement="Flow_Start_Submit">
+        <di:waypoint x="206" y="278" />
+        <di:waypoint x="240" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Submit_CheckBalance_di" bpmnElement="Flow_Submit_CheckBalance">
+        <di:waypoint x="370" y="278" />
+        <di:waypoint x="410" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Balance_Decision_di" bpmnElement="Flow_Balance_Decision">
+        <di:waypoint x="560" y="278" />
+        <di:waypoint x="600" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Decision_Gateway_di" bpmnElement="Flow_Decision_Gateway">
+        <di:waypoint x="750" y="278" />
+        <di:waypoint x="790" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Insufficient_di" bpmnElement="Flow_Insufficient">
+        <di:waypoint x="815" y="253" />
+        <di:waypoint x="815" y="110" />
+        <di:waypoint x="880" y="110" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="172" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutoApprove_di" bpmnElement="Flow_AutoApprove">
+        <di:waypoint x="840" y="278" />
+        <di:waypoint x="880" y="250" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="826" y="239" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Manager_di" bpmnElement="Flow_Manager">
+        <di:waypoint x="815" y="303" />
+        <di:waypoint x="815" y="390" />
+        <di:waypoint x="880" y="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="789" y="337" width="83" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Insufficient_End_di" bpmnElement="Flow_Insufficient_End">
+        <di:waypoint x="1060" y="110" />
+        <di:waypoint x="1110" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutoApprove_HR_di" bpmnElement="Flow_AutoApprove_HR">
+        <di:waypoint x="1060" y="250" />
+        <di:waypoint x="1200" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Manager_Gateway_di" bpmnElement="Flow_Manager_Gateway">
+        <di:waypoint x="1060" y="390" />
+        <di:waypoint x="1110" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManagerRejected_di" bpmnElement="Flow_ManagerRejected">
+        <di:waypoint x="1135" y="415" />
+        <di:waypoint x="1135" y="510" />
+        <di:waypoint x="1200" y="510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1128" y="453" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManagerApproved_di" bpmnElement="Flow_ManagerApproved">
+        <di:waypoint x="1160" y="390" />
+        <di:waypoint x="1200" y="250" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1156" y="295" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManagerRejected_End_di" bpmnElement="Flow_ManagerRejected_End">
+        <di:waypoint x="1390" y="510" />
+        <di:waypoint x="1440" y="510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_HR_UpdateBalance_di" bpmnElement="Flow_HR_UpdateBalance">
+        <di:waypoint x="1390" y="250" />
+        <di:waypoint x="1440" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Update_Notify_di" bpmnElement="Flow_Update_Notify">
+        <di:waypoint x="1610" y="250" />
+        <di:waypoint x="1660" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Notify_End_di" bpmnElement="Flow_Notify_End">
+        <di:waypoint x="1850" y="250" />
+        <di:waypoint x="1900" y="250" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

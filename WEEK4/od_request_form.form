@@ -1,0 +1,231 @@
+{
+  "components": [
+    {
+      "type": "text",
+      "text": "# On-Duty (OD) Request\nFill in the details of the event you are attending. All fields marked * are required.",
+      "id": "Field_odRequestForm_1",
+      "layout": {
+        "row": "R0",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Student Name",
+      "key": "studentName",
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_2",
+      "layout": {
+        "row": "R1",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Register Number",
+      "key": "regNo",
+      "description": "RA followed by 13 digits",
+      "validate": {
+        "required": true,
+        "pattern": "^RA[0-9]{13}$",
+        "validationType": "custom"
+      },
+      "id": "Field_odRequestForm_3",
+      "layout": {
+        "row": "R1",
+        "columns": null
+      }
+    },
+    {
+      "type": "select",
+      "label": "Department",
+      "key": "department",
+      "values": [
+        {
+          "label": "CSE",
+          "value": "CSE"
+        },
+        {
+          "label": "CSE (AI & ML)",
+          "value": "CSE (AI & ML)"
+        },
+        {
+          "label": "IT",
+          "value": "IT"
+        },
+        {
+          "label": "ECE",
+          "value": "ECE"
+        },
+        {
+          "label": "EEE",
+          "value": "EEE"
+        },
+        {
+          "label": "Mechanical",
+          "value": "Mechanical"
+        },
+        {
+          "label": "Civil",
+          "value": "Civil"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_4",
+      "layout": {
+        "row": "R2",
+        "columns": null
+      }
+    },
+    {
+      "type": "select",
+      "label": "Event Type",
+      "key": "eventType",
+      "values": [
+        {
+          "label": "Hackathon",
+          "value": "Hackathon"
+        },
+        {
+          "label": "Technical Symposium",
+          "value": "Technical Symposium"
+        },
+        {
+          "label": "Workshop / Conference",
+          "value": "Workshop / Conference"
+        },
+        {
+          "label": "Sports",
+          "value": "Sports"
+        },
+        {
+          "label": "Cultural",
+          "value": "Cultural"
+        },
+        {
+          "label": "Club / Chapter Activity",
+          "value": "Club / Chapter Activity"
+        }
+      ],
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_5",
+      "layout": {
+        "row": "R2",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Event Name",
+      "key": "eventName",
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_6",
+      "layout": {
+        "row": "R3",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Venue / Host Institution",
+      "key": "eventVenue",
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_7",
+      "layout": {
+        "row": "R3",
+        "columns": null
+      }
+    },
+    {
+      "type": "datetime",
+      "subtype": "date",
+      "dateLabel": "From Date",
+      "label": "From Date",
+      "key": "fromDate",
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_8",
+      "layout": {
+        "row": "R4",
+        "columns": null
+      }
+    },
+    {
+      "type": "datetime",
+      "subtype": "date",
+      "dateLabel": "To Date",
+      "label": "To Date",
+      "key": "toDate",
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_9",
+      "layout": {
+        "row": "R4",
+        "columns": null
+      }
+    },
+    {
+      "type": "textarea",
+      "label": "Reason for OD",
+      "key": "reason",
+      "validate": {
+        "required": true,
+        "minLength": 10
+      },
+      "id": "Field_odRequestForm_10",
+      "layout": {
+        "row": "R5",
+        "columns": null
+      }
+    },
+    {
+      "type": "textfield",
+      "label": "Proof Link (invitation / registration)",
+      "key": "proofLink",
+      "description": "Optional URL to your registration or invitation",
+      "id": "Field_odRequestForm_11",
+      "layout": {
+        "row": "R6",
+        "columns": null
+      }
+    },
+    {
+      "type": "checkbox",
+      "label": "I confirm that the above details are correct",
+      "key": "declaration",
+      "validate": {
+        "required": true
+      },
+      "id": "Field_odRequestForm_12",
+      "layout": {
+        "row": "R7",
+        "columns": null
+      }
+    }
+  ],
+  "type": "default",
+  "id": "odRequestForm",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.6.0",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.30.0"
+  },
+  "schemaVersion": 16
+}
